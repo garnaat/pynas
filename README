@@ -1,0 +1,9 @@
+This software is being developed in conjunction with the NAS
+project described here:
+
+http://coderslike.us/2010/08/06/how-to-build-a-local-nas-backed-by-amazon-s3/
+
+The goal is to build a local NAS device that provides good performance and
+also backs up all data to S3.  We want the files to be stored in the original
+form in S3 so we are not using a block-device layer on top of S3 such as
+S3Backer or ElasticDrive.
