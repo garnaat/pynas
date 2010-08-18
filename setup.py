@@ -24,15 +24,15 @@
 
 from distutils.core import setup
 
-setup(name = "nasbox",
+setup(name = "pynas",
       version = '0.1a',
       description = "S3 NAS",
-      long_description="A NAS device that backs up to S3",
+      long_description="A Python-based NAS service that backs up to S3",
       author = "Mitch Garnaat",
       author_email = "mitch@garnaat.com",
       scripts = ["bin/nas_index"],
       url = "put URL here",
-      packages = [ 'nasbox'],
+      packages = [ 'pynas'],
       license = 'MIT',
       platforms = 'Posix; MacOS X; Windows',
       classifiers = [ 'Development Status :: 2 - Pre-Alpha',
