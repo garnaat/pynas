@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+from optparse import OptionParser
+import os
+import nasbox
+
+Usage = "usage: %prog [options] path"
+
+if __name__ == "__main__":
+    parser = OptionParser(usage=Usage)
+    parser.add_option("-i", "--index", action="store", type="string",
+                      dest='index_path', help="Path to index",
+                      default="~/.nasbox")
+    options, args = parser.parse_args()
+    if len(args) != 1:
+        parser.error('path is required')
+    index_path = os.path.expanduser(options.index_path)
+    print index_path
+    path = os.path.expanduser(args[0])
+    print path
+    indexer = nasbox.NASIndexer(path, index_path)
+    indexer.main()
