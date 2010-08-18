@@ -1,7 +1,28 @@
 #!/usr/bin/env python
+# Copyright (c) 2010 Mitch Garnaat http://garnaat.org/
+# All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish, dis-
+# tribute, sublicense, and/or sell copies of the Software, and to permit
+# persons to whom the Software is furnished to do so, subject to the fol-
+# lowing conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
+# ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 from optparse import OptionParser
 import os
-import nasbox
+import pynas
 
 Usage = "usage: %prog [options] path"
 
@@ -9,7 +30,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage=Usage)
     parser.add_option("-i", "--index", action="store", type="string",
                       dest='index_path', help="Path to index",
-                      default="~/.nasbox")
+                      default="~/.pynas")
     options, args = parser.parse_args()
     if len(args) != 1:
         parser.error('path is required')
@@ -17,5 +38,5 @@ if __name__ == "__main__":
     print index_path
     path = os.path.expanduser(args[0])
     print path
-    indexer = nasbox.NASIndexer(path, index_path)
+    indexer = pynas.NASIndexer(path, index_path)
     indexer.main()
