@@ -48,11 +48,14 @@ class Uploader(object):
                 upload_date = datetime.datetime.utcnow()
                 path = d['entries'][0]['path']
                 k = self.bucket.new_key(d['hash'])
-                k.set_contents_from_filename(path)
-                print 'uploaded %s to %s' % (path, d['hash'])
-                output.put('%d' % d['entries'][0]['st_size'])
-                self.index.set_value(path, 'upload_date',
-                                     upload_date.isoformat())
+                try:
+                    k.set_contents_from_filename(path)
+                    print 'uploaded %s to %s' % (path, d['hash'])
+                    output.put('%d' % d['entries'][0]['st_size'])
+                    self.index.set_value(path, 'upload_date',
+                                         upload_date.isoformat())
+                except:
+                    print '** Error processing %s' % path
             else:
                 print '%s already uploaded' % path
                 output.put('0')
