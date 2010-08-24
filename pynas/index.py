@@ -151,6 +151,7 @@ class Index(object):
                 d = json.load(fp)
                 fp.close()
                 for entry in d['entries']:
+                    entry['path'] = urllib2.unquote(entry['path'])
                     yield entry['path']
 
     def _calculate_sha1(self, path):
