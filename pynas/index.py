@@ -192,6 +192,8 @@ class Index(object):
             fp = open(index_path, 'r')
             d = json.load(fp)
             fp.close()
+            for entry in d['entries']:
+                entry['path'] = urllib2.unquote(entry['path'])
         else:
             d = {'hash' : os.path.split(index_path)[-1],
                  'entries' : []}
@@ -208,7 +210,7 @@ class Index(object):
         :return: The new index entry for the given path.
         """
         stats = os.stat(path)
-        s = {'path' : urllib2.quote(path),
+        s = {'path' : path,
              'st_mode' : stats.st_mode,
              'st_ino' : stats.st_ino,
              'st_dev' : stats.st_dev,
@@ -236,6 +238,8 @@ class Index(object):
         :param index: The new index information to be written.
         """
         fp = open(index_path, 'w')
+        for entry in index['entries']:
+            entry['path'] = urllib2.quote(entry['path'])
         json.dump(index, fp)
         fp.close()
 
