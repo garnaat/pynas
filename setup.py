@@ -25,12 +25,12 @@
 from distutils.core import setup
 
 setup(name = "pynas",
-      version = '0.1a',
+      version = '0.1b',
       description = "S3 NAS",
       long_description="A Python-based NAS service that backs up to S3",
       author = "Mitch Garnaat",
       author_email = "mitch@garnaat.com",
-      scripts = ["bin/nas_index"],
+      scripts = ["bin/pynas_index", "bin/pynas_upload"],
       url = "put URL here",
       packages = [ 'pynas'],
       license = 'MIT',
