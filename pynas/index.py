@@ -188,7 +188,6 @@ class Index(object):
         :rtype: dict
         :return: The current index data, as a Python dictionary.
         """
-        print '_get_current_index: %s' % index_path
         if os.path.exists(index_path):
             fp = open(index_path, 'r')
             d = json.load(fp)

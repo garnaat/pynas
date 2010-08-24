@@ -8,6 +8,7 @@ import boto
 import os
 import datetime
 import pynas.index
+import Queue
 
 class Uploader(object):
 
@@ -15,7 +16,7 @@ class Uploader(object):
         self.index_path = index_path
         self.bucket_name = bucket_name
         self.num_processes = num_processes
-        self.task_queue = multiprocessing.Queue()
+        self.task_queue = multiprocessing.JoinableQueue()
         self.status_queue = multiprocessing.Queue()
         self.s3 = boto.connect_s3()
         self.bucket = self.s3.lookup(self.bucket_name)
@@ -34,12 +35,14 @@ class Uploader(object):
             bytes += int(s)
         print 'total bytes: %d' % bytes
 
-    def stop(self):
-        for i in range(self.num_processes):
-            self.task_queue.put('STOP')
-
     def worker(self, input, output):
-        for path in iter(input.get, 'STOP'):
+        while 1:
+            try:
+                path = input.get(True, 1)
+            except Queue.Empty:
+                p_name =  multiprocessing.current_process().name
+                print '%s has no more tasks' % p_name
+                break
             d = self.index.get(path)
             if 'upload_date' not in d:
                 upload_date = datetime.datetime.utcnow()
@@ -53,15 +56,18 @@ class Uploader(object):
             else:
                 print '%s already uploaded' % path
                 output.put('0')
-
+            input.task_done()
+                
     def main(self):
         self.queue_tasks()
         self.start_time = datetime.datetime.now()
         for i in range(self.num_processes):
             multiprocessing.Process(target=self.worker,
                                     args=(self.task_queue, self.status_queue)).start()
+        self.task_queue.join()
         self.get_results()
-        self.stop()
+        self.task_queue.close()
+        self.status_queue.close()
         self.end_time = datetime.datetime.now()
         print 'total time = ', (self.end_time - self.start_time)
 
