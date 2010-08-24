@@ -187,7 +187,7 @@ class Index(object):
         index_path = os.path.join(index_path, hash[2:])
         return index_path
 
-    def _read_index(self, index_path):
+    def _read_index(self, index_path, file_hash):
         """
         Read an index for a given path.  If no index exists,
         create a new one and return it.
@@ -204,7 +204,7 @@ class Index(object):
             fp.close()
             self._unquote_entries(d['entries'])
         else:
-            d = {'hash' : os.path.split(index_path)[-1],
+            d = {'hash' : file_hash,
                  'entries' : []}
         return d
 
@@ -261,7 +261,7 @@ class Index(object):
         """
         file_hash = self._calculate_sha1(path)
         index_path = self._get_index_path(file_hash)
-        index = self._read_index(index_path)
+        index = self._read_index(index_path, file_hash)
         index_entry = self._create_index_entry(path)
         found = False
         for entry in index['entries']:
@@ -272,6 +272,11 @@ class Index(object):
             index['entries'].append(index_entry)
             self._write_index(index_path, index)
         return index
+
+    def save(self, index):
+        index_path = self._get_index_path(index['hash'])
+        print 'saving %s' % index_path
+        self._write_index(index_path, index)
 
     def set_value(self, path, key, value):
         """

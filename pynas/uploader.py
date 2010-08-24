@@ -6,24 +6,31 @@ import json
 import multiprocessing
 import boto
 import os
+import sys
 import datetime
+import logging
 import pynas.index
 import Queue
 
 class Uploader(object):
 
-    def __init__(self, index_path, bucket_name, num_processes=2):
+    def __init__(self, index_path, bucket_name, num_processes=2,
+                 log_file=None, log_level=logging.INFO):
         self.index_path = index_path
         self.bucket_name = bucket_name
         self.num_processes = num_processes
+        if log_file:
+            boto.set_file_logger('pynas-uploader', log_file, log_level)
+        else:
+            boto.set_stream_logger('pynas-uploader', log_level)
         self.task_queue = multiprocessing.JoinableQueue()
         self.status_queue = multiprocessing.Queue()
         self.s3 = boto.connect_s3()
         self.bucket = self.s3.lookup(self.bucket_name)
         self.index = pynas.index.Index(index_path)
+        self.n_tasks = 0
 
     def queue_tasks(self):
-        self.n_tasks = 0
         for path in self.index:
             self.task_queue.put(path)
             self.n_tasks += 1
@@ -33,6 +40,7 @@ class Uploader(object):
         for i in range(self.n_tasks):
             s = self.status_queue.get()
             bytes += int(s)
+        print 'total tasks: %d' % self.n_tasks
         print 'total bytes: %d' % bytes
 
     def worker(self, input, output):
@@ -41,7 +49,7 @@ class Uploader(object):
                 path = input.get(True, 1)
             except Queue.Empty:
                 p_name =  multiprocessing.current_process().name
-                print '%s has no more tasks' % p_name
+                boto.log.info('%s has no more tasks' % p_name)
                 break
             d = self.index.get(path)
             if 'upload_date' not in d:
@@ -50,14 +58,15 @@ class Uploader(object):
                 k = self.bucket.new_key(d['hash'])
                 try:
                     k.set_contents_from_filename(path)
-                    print 'uploaded %s to %s' % (path, d['hash'])
+                    boto.log.info('uploaded %s to %s' % (path, d['hash']))
                     output.put('%d' % d['entries'][0]['st_size'])
-                    self.index.set_value(path, 'upload_date',
-                                         upload_date.isoformat())
+                    d['upload_date'] = upload_date.isoformat()
+                    self.index.save(d)
                 except:
-                    print '** Error processing %s' % path
+                    boto.log.error('Unexpected error: %s', sys.exc_info()[0])
+                    boto.log.error('Error processing %s' % path)
             else:
-                print '%s already uploaded' % path
+                boto.log.info('%s already uploaded' % path)
                 output.put('0')
             input.task_done()
                 
