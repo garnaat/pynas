@@ -173,15 +173,24 @@ class Index(object):
         fp.close()
         return sha1.hexdigest()
 
+    def _quote_entries(self, entries):
+        for entry in entries:
+            entry['path'] = urllib2.quote(entry['path'])
+
+    def _unquote_entries(self, entries):
+        for entry in entries:
+            entry['path'] = urllib2.unquote(entry['path'])
+
     def _get_index_path(self, hash):
         prefix = hash[0:2]
         index_path = os.path.join(self.path, hash[0:2])
         index_path = os.path.join(index_path, hash[2:])
         return index_path
 
-    def _get_current_index(self, index_path):
+    def _read_index(self, index_path):
         """
-        Returns the current index data for a given path.
+        Read an index for a given path.  If no index exists,
+        create a new one and return it.
 
         :type index_path: str
         :param index_path: Fully qualified path to the index file.
@@ -193,12 +202,29 @@ class Index(object):
             fp = open(index_path, 'r')
             d = json.load(fp)
             fp.close()
-            for entry in d['entries']:
-                entry['path'] = urllib2.unquote(entry['path'])
+            self._unquote_entries(d['entries'])
         else:
             d = {'hash' : os.path.split(index_path)[-1],
                  'entries' : []}
         return d
+
+    def _write_index(self, index_path, index):
+        """
+        Write the updated index information to the index file.
+
+        :type index_path: str
+        :param index_path: Fully-qualfied path to the index file.
+
+        :type index: dict
+        :param index: The new index information to be written.
+        """
+        fp = open(index_path, 'w')
+        self._quote_entries(index['entries'])
+        json.dump(index, fp)
+        fp.close()
+        self._unquote_entries(index['entries'])
+        for entry in index['entries']:
+            entry['path'] = urllib2.unquote(entry['path'])
 
     def _create_index_entry(self, path):
         """
@@ -228,22 +254,6 @@ class Index(object):
         s['metadata_sha1'] = sha1.hexdigest()
         return s
 
-    def _write_index(self, index_path, index):
-        """
-        Write the updated index information to the index file.
-
-        :type index_path: str
-        :param index_path: Fully-qualfied path to the index file.
-
-        :type index: dict
-        :param index: The new index information to be written.
-        """
-        fp = open(index_path, 'w')
-        for entry in index['entries']:
-            entry['path'] = urllib2.quote(entry['path'])
-        json.dump(index, fp)
-        fp.close()
-
     def get(self, path):
         """
         Return an index entry for a given path.
@@ -253,7 +263,7 @@ class Index(object):
         """
         file_hash = self._calculate_sha1(path)
         index_path = self._get_index_path(file_hash)
-        index = self._get_current_index(index_path)
+        index = self._read_index(index_path)
         index_entry = self._create_index_entry(path)
         found = False
         for entry in index['entries']:
@@ -262,7 +272,7 @@ class Index(object):
                 break
         if not found:
             index['entries'].append(index_entry)
-        self._write_index(index_path, index)
+            self._write_index(index_path, index)
         return index
 
     def set_value(self, path, key, value):
