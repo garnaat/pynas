@@ -223,8 +223,6 @@ class Index(object):
         json.dump(index, fp)
         fp.close()
         self._unquote_entries(index['entries'])
-        for entry in index['entries']:
-            entry['path'] = urllib2.unquote(entry['path'])
 
     def _create_index_entry(self, path):
         """
