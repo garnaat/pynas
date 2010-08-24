@@ -22,21 +22,25 @@
 # IN THE SOFTWARE.
 from optparse import OptionParser
 import os
-import pynas.indexer
+import pynas.uploader
 
-Usage = "usage: %prog [options] path"
+Usage = "usage: %prog [options]"
 
 if __name__ == "__main__":
     parser = OptionParser(usage=Usage)
     parser.add_option("-i", "--index", action="store", type="string",
                       dest='index_path', help="Path to index",
                       default="~/.pynas")
+    parser.add_option("-b", "--bucket", action="store", type="string",
+                      dest='bucket_name', help="S3 bucket name",
+                      default="pynas")
+    parser.add_option("-p", "--processes", action="store", type="int",
+                      dest='num_processes', help="Number of upload workers",
+                      default=4)
     options, args = parser.parse_args()
-    if len(args) != 1:
-        parser.error('path is required')
+    if len(args) != 0:
+        parser.error('unknown arguments')
     index_path = os.path.expanduser(options.index_path)
-    print index_path
-    path = os.path.expanduser(args[0])
-    print path
-    indexer = pynas.indexer.Indexer(path, index_path)
-    indexer.main()
+    u = pynas.uploader.Uploader(index_path, options.bucket_name,
+                                options.num_processes)
+    u.main()
