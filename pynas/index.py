@@ -187,7 +187,7 @@ class Index(object):
         index_path = os.path.join(index_path, hash[2:])
         return index_path
 
-    def _read_index(self, index_path, file_hash):
+    def _read_index(self, index_path, file_hash, create_new=True):
         """
         Read an index for a given path.  If no index exists,
         create a new one and return it.
@@ -203,9 +203,11 @@ class Index(object):
             d = json.load(fp)
             fp.close()
             self._unquote_entries(d['entries'])
-        else:
+        elif create_new:
             d = {'hash' : file_hash,
                  'entries' : []}
+        else:
+            d = None
         return d
 
     def _write_index(self, index_path, index):
@@ -273,22 +275,21 @@ class Index(object):
             self._write_index(index_path, index)
         return index
 
+    def get_from_hash(self, hash):
+        """
+        Return an index entry for a given hash.
+
+        :type hash: str
+        :param hash: SHA1 hash for the file.
+        """
+        index_path = self._get_index_path(hash)
+        index = self._read_index(index_path, hash, False)
+        return index
+
     def save(self, index):
         index_path = self._get_index_path(index['hash'])
         print 'saving %s' % index_path
         self._write_index(index_path, index)
 
-    def set_value(self, path, key, value):
-        """
-        Set a key/value pair for a given path.
-
-        :type path: str
-        :param path: Fully-qualified path to the file.
-        """
-        file_hash = self._calculate_sha1(path)
-        index_path = self._get_index_path(file_hash)
-        index = self._get_current_index(index_path)
-        index[key] = value
-        self._write_index(index_path, index)
 
                 
