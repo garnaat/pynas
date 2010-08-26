@@ -51,7 +51,12 @@ class Uploader(object):
                 p_name =  multiprocessing.current_process().name
                 boto.log.info('%s has no more tasks' % p_name)
                 break
-            d = self.index.get(path)
+            try:
+                d = self.index.get(path)
+            except IOError:
+                boto.log.error('IO Error with %s' % path)
+                input.task_done
+                continue
             if 'upload_date' not in d:
                 upload_date = datetime.datetime.utcnow()
                 path = d['entries'][0]['path']
